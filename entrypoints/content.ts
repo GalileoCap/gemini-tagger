@@ -5,7 +5,13 @@ interface ChatTags {
   [chatId: string]: string[];
 }
 
-const STORAGE_KEY = 'chatTags';
+interface StorageData {
+  version: number;
+  tags: ChatTags;
+}
+
+const STORAGE_KEY = 'geminiTaggerData';
+const CURRENT_VERSION = 1;
 
 function getChatIdFromHref(href: string): string | null {
   const match = href.match(/\/app\/([a-zA-Z0-9_-]+)/);
@@ -19,14 +25,42 @@ async function getTags(): Promise<ChatTags> {
   if (cacheLoaded) {
     return tagsCache;
   }
-  const result = await browser.storage.local.get(STORAGE_KEY);
-  tagsCache = result[STORAGE_KEY] || {};
+  
+  // Check for new format first
+  const newResult = await browser.storage.local.get(STORAGE_KEY);
+  const data: StorageData = newResult[STORAGE_KEY];
+  
+  // Migration: check for old format and migrate
+  if (!data) {
+    const oldResult = await browser.storage.local.get('chatTags');
+    const oldTags: ChatTags = oldResult['chatTags'] || {};
+    if (Object.keys(oldTags).length > 0) {
+      // Migrate from old format
+      await saveTags(oldTags);
+      cacheLoaded = true;
+      return oldTags;
+    }
+    tagsCache = {};
+    cacheLoaded = true;
+    return tagsCache;
+  }
+  
+  // Migration: handle version changes
+  if (data.version < CURRENT_VERSION) {
+    await saveTags(data.tags);
+  }
+  
+  tagsCache = data.tags || {};
   cacheLoaded = true;
   return tagsCache;
 }
 
 async function saveTags(tags: ChatTags): Promise<void> {
-  await browser.storage.local.set({ [STORAGE_KEY]: tags });
+  const data: StorageData = {
+    version: CURRENT_VERSION,
+    tags: tags
+  };
+  await browser.storage.local.set({ [STORAGE_KEY]: data });
   tagsCache = tags;
 }
 

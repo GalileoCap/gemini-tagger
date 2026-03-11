@@ -2,7 +2,7 @@
   "name": "gemini-tagger",
   "description": "Add tags to Gemini conversations for organization and filtering",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
