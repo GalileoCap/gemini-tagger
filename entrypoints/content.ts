@@ -266,24 +266,22 @@ export default defineContentScript({
   main() {
     console.log('Gemini Tagger: Content script loaded');
 
+    document.addEventListener('contextmenu', (e) => {
+      const target = e.target as HTMLElement;
+      const conversation = target.closest<HTMLAnchorElement>('a[data-test-id="conversation"]');
+      
+      if (conversation) {
+        e.preventDefault();
+        const chatId = getChatIdFromHref(conversation.href);
+        if (chatId) {
+          createContextMenu(chatId, e.clientX, e.clientY);
+        }
+      }
+    });
+
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-      
-      const actionsButton = target.closest<HTMLElement>('button[data-test-id="actions-menu-button"]');
-      
-      if (actionsButton) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const conversation = actionsButton.closest<HTMLAnchorElement>('a[data-test-id="conversation"]');
-        if (conversation) {
-          const chatId = getChatIdFromHref(conversation.href);
-          if (chatId) {
-            const rect = actionsButton.getBoundingClientRect();
-            createContextMenu(chatId, rect.left, rect.bottom);
-          }
-        }
-      } else if (!target.closest('#gt-context-menu')) {
+      if (!target.closest('#gt-context-menu')) {
         removeContextMenu();
       }
     });
