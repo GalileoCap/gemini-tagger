@@ -1,0 +1,113 @@
+/* Gemini Tagger - Content Script Styles */
+
+/* Filter Bar */
+#gt-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.gt-filter-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gt-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gt-filter-btn.active {
+  background: var(--tag-color, #3b82f6);
+  color: white;
+}
+
+.gt-deleted-btn.active {
+  background: #ef4444;
+  --tag-color: #ef4444;
+}
+
+/* Tags */
+.gt-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 6px;
+  border-radius: 10px;
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Context Menu */
+#gt-context-menu {
+  position: fixed;
+  z-index: 999999;
+  min-width: 150px;
+  background: #1f1f1f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 4px 0;
+  font-family: inherit;
+}
+
+.gt-menu-item {
+  padding: 8px 16px;
+  color: #e0e0e0;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gt-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.gt-delete-item {
+  color: #ef4444;
+}
+
+.gt-delete-item:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Dark mode adjustments for light backgrounds */
+@media (prefers-color-scheme: light) {
+  #gt-filter-bar {
+    background: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .gt-filter-btn {
+    background: rgba(0, 0, 0, 0.08);
+    color: #333;
+  }
+
+  .gt-filter-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  #gt-context-menu {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .gt-menu-item {
+    color: #333;
+  }
+
+  .gt-menu-item:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+}
