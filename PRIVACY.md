@@ -20,6 +20,7 @@ This data remains on your device and is never transmitted to external servers.
 ### Third-Party Access
 
 This extension does not:
+
 - Send data to any external servers
 - Use analytics or tracking
 - Include third-party scripts or services
@@ -28,6 +29,7 @@ This extension does not:
 ### Permissions
 
 The extension requires only one permission:
+
 - **storage**: Used to persist your tags locally in the browser
 
 ### Changes to Policy

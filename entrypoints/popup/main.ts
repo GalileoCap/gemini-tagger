@@ -7,7 +7,7 @@ if (app) {
   title.style.fontSize = '16px';
   title.style.margin = '10px';
   app.appendChild(title);
-  
+
   const desc = document.createElement('p');
   desc.textContent = 'Right-click conversations to add tags';
   desc.style.fontSize = '12px';

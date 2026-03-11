@@ -2,20 +2,35 @@
   "name": "gemini-tagger",
   "description": "Add tags to Gemini conversations for organization and filtering",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
+    "dev:chrome": "wxt -b chrome",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
+    "build:chrome": "wxt build -b chrome",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
+    "zip:chrome": "wxt zip -b chrome",
+    "lint": "eslint --config .eslintrc.cjs './**/*.{ts,js}' --ext .ts,.js",
+    "lint:fix": "eslint --config .eslintrc.cjs './**/*.{ts,js}' --ext .ts,.js --fix",
+    "format": "prettier --write \"**/*.{ts,js,css,md,json}\"",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "wxt": "^0.20.18"
+  },
+  "dependencies": {
+    "webextension-polyfill": "^0.12.0"
   }
 }

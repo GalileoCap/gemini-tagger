@@ -1,4 +1,5 @@
 import { defineContentScript } from '#imports';
+import browser from 'webextension-polyfill';
 import './content/styles.css';
 
 interface ChatTags {
@@ -25,11 +26,11 @@ async function getTags(): Promise<ChatTags> {
   if (cacheLoaded) {
     return tagsCache;
   }
-  
+
   // Check for new format first
   const newResult = await browser.storage.local.get(STORAGE_KEY);
   const data: StorageData = newResult[STORAGE_KEY];
-  
+
   // Migration: check for old format and migrate
   if (!data) {
     const oldResult = await browser.storage.local.get('chatTags');
@@ -44,12 +45,12 @@ async function getTags(): Promise<ChatTags> {
     cacheLoaded = true;
     return tagsCache;
   }
-  
+
   // Migration: handle version changes
   if (data.version < CURRENT_VERSION) {
     await saveTags(data.tags);
   }
-  
+
   tagsCache = data.tags || {};
   cacheLoaded = true;
   return tagsCache;
@@ -58,7 +59,7 @@ async function getTags(): Promise<ChatTags> {
 async function saveTags(tags: ChatTags): Promise<void> {
   const data: StorageData = {
     version: CURRENT_VERSION,
-    tags: tags
+    tags: tags,
   };
   await browser.storage.local.set({ [STORAGE_KEY]: data });
   tagsCache = tags;
@@ -85,15 +86,15 @@ function createFilterBar(activeFilters: Set<string>, allTags: string[]): HTMLEle
   container.appendChild(allBtn);
 
   const uniqueTags = new Set<string>();
-  allTags.forEach(chatTags => {
-    chatTags.forEach(tag => {
+  allTags.forEach((chatTags) => {
+    chatTags.forEach((tag) => {
       if (tag !== 'deleted') {
         uniqueTags.add(tag);
       }
     });
   });
 
-  uniqueTags.forEach(tag => {
+  uniqueTags.forEach((tag) => {
     const btn = document.createElement('button');
     btn.className = `gt-filter-btn ${activeFilters.has(tag) ? 'active' : ''}`;
     btn.textContent = tag;
@@ -132,7 +133,7 @@ async function setFilter(filter: string, addToSelection: boolean = false): Promi
   } else {
     activeFilters = new Set<string>([filter]);
   }
-  
+
   updateFilterButtonStates();
   applyFilter();
 }
@@ -140,12 +141,12 @@ async function setFilter(filter: string, addToSelection: boolean = false): Promi
 function updateFilterButtonStates(): void {
   const filterBar = document.getElementById('gt-filter-bar');
   if (!filterBar) return;
-  
+
   const buttons = filterBar.querySelectorAll('.gt-filter-btn');
-  buttons.forEach(btn => {
+  buttons.forEach((btn) => {
     const btnEl = btn as HTMLButtonElement;
     const btnText = btnEl.textContent?.toLowerCase().trim();
-    
+
     let isActive = false;
     if (btnText === 'all') {
       isActive = activeFilters.has('all');
@@ -154,24 +155,26 @@ function updateFilterButtonStates(): void {
     } else if (btnText) {
       isActive = activeFilters.has(btnText);
     }
-    
+
     btnEl.classList.toggle('active', isActive);
   });
 }
 
 function applyFilter(): void {
-  const conversations = document.querySelectorAll<HTMLAnchorElement>('a[data-test-id="conversation"]');
+  const conversations = document.querySelectorAll<HTMLAnchorElement>(
+    'a[data-test-id="conversation"]'
+  );
   const tags = document.querySelectorAll('.gt-tag');
-  
-  tags.forEach(tagEl => tagEl.remove());
 
-  getTags().then(tagsMap => {
+  tags.forEach((tagEl) => tagEl.remove());
+
+  getTags().then((tagsMap) => {
     const filters = Array.from(activeFilters);
     const hasAll = filters.includes('all');
     const hasDeleted = filters.includes('__deleted__');
-    const tagFilters = filters.filter(f => f !== 'all' && f !== '__deleted__');
+    const tagFilters = filters.filter((f) => f !== 'all' && f !== '__deleted__');
 
-    conversations.forEach(conv => {
+    conversations.forEach((conv) => {
       const chatId = getChatIdFromHref(conv.href);
       if (!chatId) return;
 
@@ -186,9 +189,9 @@ function applyFilter(): void {
         shouldShow = hasDeletedTag;
       } else {
         if (hasDeleted) {
-          shouldShow = hasDeletedTag && tagFilters.every(tag => chatTags.includes(tag));
+          shouldShow = hasDeletedTag && tagFilters.every((tag) => chatTags.includes(tag));
         } else {
-          shouldShow = !hasDeletedTag && tagFilters.every(tag => chatTags.includes(tag));
+          shouldShow = !hasDeletedTag && tagFilters.every((tag) => chatTags.includes(tag));
         }
       }
 
@@ -197,7 +200,7 @@ function applyFilter(): void {
       if (shouldShow && chatTags.length > 0) {
         const titleEl = conv.querySelector('.conversation-title');
         if (titleEl) {
-          chatTags.forEach(tag => {
+          chatTags.forEach((tag) => {
             if (tag !== 'deleted') {
               const tagEl = createTagElement(tag);
               titleEl.appendChild(tagEl);
@@ -217,7 +220,7 @@ function createContextMenu(chatId: string, x: number, y: number): void {
   menu.style.left = `${x}px`;
   menu.style.top = `${y}px`;
 
-  getTags().then(tags => {
+  getTags().then((tags) => {
     const currentTags = tags[chatId] || [];
 
     const addTagItem = document.createElement('div');
@@ -237,18 +240,20 @@ function createContextMenu(chatId: string, x: number, y: number): void {
     });
     menu.appendChild(addTagItem);
 
-    if (currentTags.filter(t => t !== 'deleted').length > 0) {
+    if (currentTags.filter((t) => t !== 'deleted').length > 0) {
       const removeTagItem = document.createElement('div');
       removeTagItem.className = 'gt-menu-item';
       removeTagItem.textContent = 'Remove Tag';
       removeTagItem.addEventListener('click', async () => {
         removeContextMenu();
-        const nonDeletedTags = currentTags.filter(t => t !== 'deleted');
-        const tagToRemove = prompt(`Current tags: ${nonDeletedTags.join(', ')}\nEnter tag to remove:`);
+        const nonDeletedTags = currentTags.filter((t) => t !== 'deleted');
+        const tagToRemove = prompt(
+          `Current tags: ${nonDeletedTags.join(', ')}\nEnter tag to remove:`
+        );
         if (tagToRemove) {
           const tag = tagToRemove.trim().toLowerCase();
           if (nonDeletedTags.includes(tag)) {
-            tags[chatId] = currentTags.filter(t => t !== tag);
+            tags[chatId] = currentTags.filter((t) => t !== tag);
             await saveTags(tags);
             refreshUI();
           }
@@ -264,9 +269,9 @@ function createContextMenu(chatId: string, x: number, y: number): void {
     deleteItem.addEventListener('click', async () => {
       removeContextMenu();
       if (hasDeletedTag) {
-        tags[chatId] = currentTags.filter(t => t !== 'deleted');
+        tags[chatId] = currentTags.filter((t) => t !== 'deleted');
       } else {
-        tags[chatId] = [...currentTags.filter(t => t !== 'deleted'), 'deleted'];
+        tags[chatId] = [...currentTags.filter((t) => t !== 'deleted'), 'deleted'];
       }
       await saveTags(tags);
       refreshUI();
@@ -293,28 +298,28 @@ function removeContextMenu(): void {
 async function refreshUI(): Promise<void> {
   const tags = await getTags();
   const allTagArrays = Object.values(tags);
-  
+
   const container = document.querySelector('.conversation-items-container');
   let filterBar = document.getElementById('gt-filter-bar');
-  
+
   // Get existing tags from filter bar to compare
   const existingTagBtns = filterBar?.querySelectorAll('.gt-filter-btn');
   const existingTags = new Set<string>();
-  existingTagBtns?.forEach(btn => {
+  existingTagBtns?.forEach((btn) => {
     const text = (btn as HTMLButtonElement).textContent?.toLowerCase().trim();
     if (text && text !== 'all' && text !== 'deleted') {
       existingTags.add(text);
     }
   });
-  
+
   // Get new unique tags from storage
   const newUniqueTags = new Set<string>();
-  allTagArrays.forEach(chatTags => {
-    chatTags.forEach(tag => {
+  allTagArrays.forEach((chatTags) => {
+    chatTags.forEach((tag) => {
       if (tag !== 'deleted') newUniqueTags.add(tag);
     });
   });
-  
+
   // Check if tags changed
   let tagsChanged = false;
   if (existingTags.size !== newUniqueTags.size) {
@@ -327,7 +332,7 @@ async function refreshUI(): Promise<void> {
       }
     }
   }
-  
+
   // Recreate filter bar if tags changed or it doesn't exist
   if (!filterBar && container) {
     filterBar = createFilterBar(activeFilters, allTagArrays);
@@ -339,13 +344,13 @@ async function refreshUI(): Promise<void> {
   } else {
     updateFilterButtonStates();
   }
-  
+
   applyFilter();
 }
 
 function setupObserver(): void {
   let debounceTimer: ReturnType<typeof setTimeout>;
-  
+
   const observer = new MutationObserver(() => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
@@ -367,7 +372,7 @@ export default defineContentScript({
     document.addEventListener('contextmenu', (e) => {
       const target = e.target as HTMLElement;
       const conversation = target.closest<HTMLAnchorElement>('a[data-test-id="conversation"]');
-      
+
       if (conversation) {
         e.preventDefault();
         const chatId = getChatIdFromHref(conversation.href);
@@ -385,7 +390,7 @@ export default defineContentScript({
     });
 
     setupObserver();
-    
+
     setTimeout(() => refreshUI(), 1000);
   },
 });

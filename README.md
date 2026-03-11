@@ -42,6 +42,7 @@ pnpm dev:firefox
 ```
 
 Then:
+
 1. Open Firefox and go to `about:debugging`
 2. Click "This Firefox" → "Load Temporary Add-on"
 3. Navigate to `gemini-tagger/.output/firefox-mv3/` and select `manifest.json`
