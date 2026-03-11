@@ -11,11 +11,11 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         id: 'gemini-tagger@local',
+        data_collection_permissions: {
+          contacted: [],
+          stored: [],
+        },
       },
-    },
-    data_collection_permissions: {
-      contacted: [],
-      stored: [],
     },
   },
 });
