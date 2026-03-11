@@ -40,12 +40,13 @@
   padding: 1px 6px;
   margin-left: 4px;
   border-radius: 8px;
-  background-color: var(--tag-bg, rgba(255, 255, 255, 0.2));
-  color: #1f1f1f;
+  background-color: rgba(128, 128, 128, 0.2);
+  color: #666;
   font-size: 11px;
   font-family: inherit;
   font-weight: 500;
   white-space: nowrap;
+  pointer-events: auto;
 }
 
 #gt-context-menu {
@@ -111,7 +112,7 @@
   }
 
   .gt-tag {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #1f1f1f;
+    background-color: rgba(128, 128, 128, 0.2);
+    color: #666;
   }
 }

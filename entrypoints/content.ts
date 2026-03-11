@@ -8,14 +8,14 @@ interface ChatTags {
 const STORAGE_KEY = 'chatTags';
 
 const TAG_COLORS = [
-  '#dbeafe', // blue-100
-  '#dcfce7', // green-100
-  '#fee2e2', // red-100
-  '#fef3c7', // amber-100
-  '#f3e8ff', // purple-100
-  '#fed7aa', // orange-100
-  '#fce7f3', // pink-100
-  '#ccfbf1', // teal-100
+  '#e0f2fe', // sky-50
+  '#dcfce7', // green-50
+  '#fef2f2', // red-50
+  '#fefce8', // yellow-50
+  '#faf5ff', // violet-50
+  '#fff7ed', // orange-50
+  '#fdf2f8', // pink-50
+  '#f0fdfa', // teal-50
 ];
 
 function getTagColor(tag: string): string {
@@ -31,34 +31,42 @@ function getChatIdFromHref(href: string): string | null {
   return match ? match[1] : null;
 }
 
+let tagsCache: ChatTags = {};
+let cacheLoaded = false;
+
 async function getTags(): Promise<ChatTags> {
+  if (cacheLoaded) {
+    return tagsCache;
+  }
   const result = await browser.storage.local.get(STORAGE_KEY);
-  return result[STORAGE_KEY] || {};
+  tagsCache = result[STORAGE_KEY] || {};
+  cacheLoaded = true;
+  return tagsCache;
 }
 
 async function saveTags(tags: ChatTags): Promise<void> {
   await browser.storage.local.set({ [STORAGE_KEY]: tags });
+  tagsCache = tags;
 }
 
 function createTagElement(tag: string): HTMLElement {
   const span = document.createElement('span');
   span.className = 'gt-tag';
   span.textContent = tag;
-  const color = getTagColor(tag);
-  span.style.setProperty('--tag-bg', color);
-  span.style.color = '#1f1f1f';
+  span.style.color = '#666';
   return span;
 }
 
-function createFilterBar(activeFilter: string, allTags: string[]): HTMLElement {
+function createFilterBar(activeFilters: Set<string>, allTags: string[]): HTMLElement {
   const container = document.createElement('div');
   container.className = 'gt-filter-bar';
   container.id = 'gt-filter-bar';
 
   const allBtn = document.createElement('button');
-  allBtn.className = `gt-filter-btn ${activeFilter === 'all' ? 'active' : ''}`;
+  allBtn.className = `gt-filter-btn ${activeFilters.has('all') ? 'active' : ''}`;
   allBtn.textContent = 'All';
-  allBtn.addEventListener('click', () => setFilter('all'));
+  allBtn.title = 'Click to show all (Ctrl+Click for multiple)';
+  allBtn.addEventListener('click', (e) => setFilter('all', e.ctrlKey || e.metaKey));
   container.appendChild(allBtn);
 
   const uniqueTags = new Set<string>();
@@ -72,36 +80,69 @@ function createFilterBar(activeFilter: string, allTags: string[]): HTMLElement {
 
   uniqueTags.forEach(tag => {
     const btn = document.createElement('button');
-    btn.className = `gt-filter-btn ${activeFilter === tag ? 'active' : ''}`;
+    btn.className = `gt-filter-btn ${activeFilters.has(tag) ? 'active' : ''}`;
     btn.textContent = tag;
     btn.style.setProperty('--tag-color', getTagColor(tag));
-    btn.addEventListener('click', () => setFilter(tag));
+    btn.title = 'Ctrl+Click to select multiple (intersection)';
+    btn.addEventListener('click', (e) => setFilter(tag, e.ctrlKey || e.metaKey));
     container.appendChild(btn);
   });
 
   const deletedBtn = document.createElement('button');
-  deletedBtn.className = `gt-filter-btn gt-deleted-btn ${activeFilter === '__deleted__' ? 'active' : ''}`;
+  deletedBtn.className = `gt-filter-btn gt-deleted-btn ${activeFilters.has('__deleted__') ? 'active' : ''}`;
+  deletedBtn.title = 'Ctrl+Click for intersection';
   deletedBtn.textContent = 'Deleted';
-  deletedBtn.addEventListener('click', () => setFilter('__deleted__'));
+  deletedBtn.addEventListener('click', (e) => setFilter('__deleted__', e.ctrlKey || e.metaKey));
   container.appendChild(deletedBtn);
 
   return container;
 }
 
-let currentFilter = 'all';
+let activeFilters = new Set<string>(['all']);
 
-async function setFilter(filter: string): Promise<void> {
-  currentFilter = filter;
-  const tags = await getTags();
-  const allTagArrays = Object.values(tags);
-  
-  const filterBar = document.getElementById('gt-filter-bar');
-  if (filterBar) {
-    const newFilterBar = createFilterBar(filter, allTagArrays);
-    filterBar.replaceWith(newFilterBar);
+async function setFilter(filter: string, addToSelection: boolean = false): Promise<void> {
+  if (addToSelection) {
+    if (filter === 'all') {
+      activeFilters = new Set<string>(['all']);
+    } else {
+      activeFilters.delete('all');
+      if (activeFilters.has(filter)) {
+        activeFilters.delete(filter);
+      } else {
+        activeFilters.add(filter);
+      }
+      if (activeFilters.size === 0) {
+        activeFilters.add('all');
+      }
+    }
+  } else {
+    activeFilters = new Set<string>([filter]);
   }
-
+  
+  updateFilterButtonStates();
   applyFilter();
+}
+
+function updateFilterButtonStates(): void {
+  const filterBar = document.getElementById('gt-filter-bar');
+  if (!filterBar) return;
+  
+  const buttons = filterBar.querySelectorAll('.gt-filter-btn');
+  buttons.forEach(btn => {
+    const btnEl = btn as HTMLButtonElement;
+    const btnText = btnEl.textContent?.toLowerCase().trim();
+    
+    let isActive = false;
+    if (btnText === 'all') {
+      isActive = activeFilters.has('all');
+    } else if (btnText === 'deleted') {
+      isActive = activeFilters.has('__deleted__');
+    } else if (btnText) {
+      isActive = activeFilters.has(btnText);
+    }
+    
+    btnEl.classList.toggle('active', isActive);
+  });
 }
 
 function applyFilter(): void {
@@ -111,6 +152,11 @@ function applyFilter(): void {
   tags.forEach(tagEl => tagEl.remove());
 
   getTags().then(tagsMap => {
+    const filters = Array.from(activeFilters);
+    const hasAll = filters.includes('all');
+    const hasDeleted = filters.includes('__deleted__');
+    const tagFilters = filters.filter(f => f !== 'all' && f !== '__deleted__');
+
     conversations.forEach(conv => {
       const chatId = getChatIdFromHref(conv.href);
       if (!chatId) return;
@@ -120,12 +166,16 @@ function applyFilter(): void {
 
       let shouldShow = true;
 
-      if (currentFilter === '__deleted__') {
-        shouldShow = hasDeletedTag;
-      } else if (currentFilter === 'all') {
+      if (hasAll || (tagFilters.length === 0 && !hasDeleted)) {
         shouldShow = !hasDeletedTag;
+      } else if (hasDeleted && tagFilters.length === 0) {
+        shouldShow = hasDeletedTag;
       } else {
-        shouldShow = chatTags.includes(currentFilter) && !hasDeletedTag;
+        if (hasDeleted) {
+          shouldShow = hasDeletedTag && tagFilters.every(tag => chatTags.includes(tag));
+        } else {
+          shouldShow = !hasDeletedTag && tagFilters.every(tag => chatTags.includes(tag));
+        }
       }
 
       conv.style.display = shouldShow ? '' : 'none';
@@ -230,18 +280,52 @@ async function refreshUI(): Promise<void> {
   const tags = await getTags();
   const allTagArrays = Object.values(tags);
   
+  const container = document.querySelector('.conversation-items-container');
   let filterBar = document.getElementById('gt-filter-bar');
-  if (!filterBar) {
-    const container = document.querySelector('.conversation-items-container');
-    if (container) {
-      filterBar = createFilterBar(currentFilter, allTagArrays);
-      container.insertBefore(filterBar, container.firstChild);
+  
+  // Get existing tags from filter bar to compare
+  const existingTagBtns = filterBar?.querySelectorAll('.gt-filter-btn');
+  const existingTags = new Set<string>();
+  existingTagBtns?.forEach(btn => {
+    const text = (btn as HTMLButtonElement).textContent?.toLowerCase().trim();
+    if (text && text !== 'all' && text !== 'deleted') {
+      existingTags.add(text);
     }
+  });
+  
+  // Get new unique tags from storage
+  const newUniqueTags = new Set<string>();
+  allTagArrays.forEach(chatTags => {
+    chatTags.forEach(tag => {
+      if (tag !== 'deleted') newUniqueTags.add(tag);
+    });
+  });
+  
+  // Check if tags changed
+  let tagsChanged = false;
+  if (existingTags.size !== newUniqueTags.size) {
+    tagsChanged = true;
   } else {
-    const newFilterBar = createFilterBar(currentFilter, allTagArrays);
-    filterBar.replaceWith(newFilterBar);
+    for (const tag of newUniqueTags) {
+      if (!existingTags.has(tag)) {
+        tagsChanged = true;
+        break;
+      }
+    }
   }
-
+  
+  // Recreate filter bar if tags changed or it doesn't exist
+  if (!filterBar && container) {
+    filterBar = createFilterBar(activeFilters, allTagArrays);
+    container.insertBefore(filterBar, container.firstChild);
+  } else if (tagsChanged && container) {
+    filterBar?.remove();
+    filterBar = createFilterBar(activeFilters, allTagArrays);
+    container.insertBefore(filterBar, container.firstChild);
+  } else {
+    updateFilterButtonStates();
+  }
+  
   applyFilter();
 }
 
@@ -252,7 +336,7 @@ function setupObserver(): void {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       refreshUI();
-    }, 500);
+    }, 200);
   });
 
   observer.observe(document.body, {
