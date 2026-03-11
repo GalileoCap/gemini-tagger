@@ -12,7 +12,7 @@ export default defineConfig({
       gecko: {
         id: 'gemini-tagger@local',
         data_collection_permissions: {
-          required: [],
+          required: ['none'],
           contacted: [],
           stored: [],
         },
