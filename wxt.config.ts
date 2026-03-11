@@ -8,5 +8,14 @@ export default defineConfig({
     description: 'Add tags to Gemini conversations for organization and filtering',
     version: '0.1.0',
     permissions: ['storage'],
+    browser_specific_settings: {
+      gecko: {
+        id: 'gemini-tagger@local',
+      },
+    },
+    data_collection_permissions: {
+      contacted: [],
+      stored: [],
+    },
   },
 });

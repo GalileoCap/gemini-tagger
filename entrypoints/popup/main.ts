@@ -1,24 +1,17 @@
 import './style.css';
-import typescriptLogo from '@/assets/typescript.svg';
-import wxtLogo from '/wxt.svg';
-import { setupCounter } from '@/components/counter';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://wxt.dev" target="_blank">
-      <img src="${wxtLogo}" class="logo" alt="WXT logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>WXT + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the WXT and TypeScript logos to learn more
-    </p>
-  </div>
-`;
-
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!);
+const app = document.querySelector<HTMLDivElement>('#app');
+if (app) {
+  const title = document.createElement('h1');
+  title.textContent = 'Gemini Tagger';
+  title.style.fontSize = '16px';
+  title.style.margin = '10px';
+  app.appendChild(title);
+  
+  const desc = document.createElement('p');
+  desc.textContent = 'Right-click conversations to add tags';
+  desc.style.fontSize = '12px';
+  desc.style.margin = '10px';
+  desc.style.color = '#666';
+  app.appendChild(desc);
+}
