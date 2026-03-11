@@ -65,6 +65,26 @@ async function saveTags(tags: ChatTags): Promise<void> {
   tagsCache = tags;
 }
 
+let _updateFilterDebounce: ReturnType<typeof setTimeout> | null = null;
+
+async function updateFilterBarFromStorage(delay = 100): Promise<void> {
+  if (_updateFilterDebounce) clearTimeout(_updateFilterDebounce);
+  return new Promise((resolve) => {
+    _updateFilterDebounce = setTimeout(async () => {
+      _updateFilterDebounce = null;
+      const tags = await getTags();
+      const allTagArrays = Object.values(tags);
+      const container = document.querySelector('.conversation-items-container');
+      if (!container) return resolve();
+      const existing = document.getElementById('gt-filter-bar');
+      const newBar = createFilterBar(activeFilters, allTagArrays);
+      if (existing) existing.replaceWith(newBar);
+      else container.insertBefore(newBar, container.firstChild);
+      resolve();
+    }, delay);
+  });
+}
+
 function createTagElement(tag: string): HTMLElement {
   const span = document.createElement('span');
   span.className = 'gt-tag';
@@ -234,6 +254,7 @@ function createContextMenu(chatId: string, x: number, y: number): void {
         if (!currentTags.includes(newTag)) {
           tags[chatId] = [...currentTags, newTag];
           await saveTags(tags);
+          await updateFilterBarFromStorage();
           refreshUI();
         }
       }
@@ -255,6 +276,7 @@ function createContextMenu(chatId: string, x: number, y: number): void {
           if (nonDeletedTags.includes(tag)) {
             tags[chatId] = currentTags.filter((t) => t !== tag);
             await saveTags(tags);
+            await updateFilterBarFromStorage();
             refreshUI();
           }
         }
@@ -274,6 +296,7 @@ function createContextMenu(chatId: string, x: number, y: number): void {
         tags[chatId] = [...currentTags.filter((t) => t !== 'deleted'), 'deleted'];
       }
       await saveTags(tags);
+      await updateFilterBarFromStorage();
       refreshUI();
     });
     menu.appendChild(deleteItem);
