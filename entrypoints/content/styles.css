@@ -26,13 +26,13 @@
 }
 
 .gt-filter-btn.active {
-  background: var(--tag-color, #3b82f6);
-  color: white;
+  background: rgba(128, 128, 128, 0.4);
+  color: #fff;
 }
 
 .gt-deleted-btn.active {
-  background: #ef4444;
-  --tag-color: #ef4444;
+  background: rgba(128, 128, 128, 0.4);
+  --tag-color: rgba(128, 128, 128, 0.4);
 }
 
 .gt-tag {

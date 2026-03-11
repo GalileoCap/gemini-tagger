@@ -7,25 +7,6 @@ interface ChatTags {
 
 const STORAGE_KEY = 'chatTags';
 
-const TAG_COLORS = [
-  '#e0f2fe', // sky-50
-  '#dcfce7', // green-50
-  '#fef2f2', // red-50
-  '#fefce8', // yellow-50
-  '#faf5ff', // violet-50
-  '#fff7ed', // orange-50
-  '#fdf2f8', // pink-50
-  '#f0fdfa', // teal-50
-];
-
-function getTagColor(tag: string): string {
-  let hash = 0;
-  for (let i = 0; i < tag.length; i++) {
-    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
-}
-
 function getChatIdFromHref(href: string): string | null {
   const match = href.match(/\/app\/([a-zA-Z0-9_-]+)/);
   return match ? match[1] : null;
@@ -82,7 +63,6 @@ function createFilterBar(activeFilters: Set<string>, allTags: string[]): HTMLEle
     const btn = document.createElement('button');
     btn.className = `gt-filter-btn ${activeFilters.has(tag) ? 'active' : ''}`;
     btn.textContent = tag;
-    btn.style.setProperty('--tag-color', getTagColor(tag));
     btn.title = 'Ctrl+Click to select multiple (intersection)';
     btn.addEventListener('click', (e) => setFilter(tag, e.ctrlKey || e.metaKey));
     container.appendChild(btn);

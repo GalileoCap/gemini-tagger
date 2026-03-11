@@ -10,20 +10,21 @@
 - Ask clarifying questions before making assumptions
 
 ## Git Commit Guidelines
-- Make **small, focused commits** - each commit should represent one logical change
-- When working on multiple changes, commit **one at a time** and ask for testing before continuing
+- **Never combine multiple changes into one commit** - each commit should address ONE specific change
+- When user requests multiple changes, implement and test ONE at a time, commit it, then ask for testing before continuing
 - Use **detailed git commits** with the following prefixes:
   - `[feat]` - new working features or major changes
-  - `[proto]` - work in progress / prototyping
+  - `[proto]` - work in progress / prototyping  
   - `[fix]` - bug fixes that don't introduce new features
   - `[refactor]` - code cleaning and refactoring
   - `[docs]` - README and documentation updates
 
 ## Testing Workflow
-- **Always ask user to test** after each change or small group of changes
-- Run `pnpm dev:firefox` and wait for user feedback before making more changes
-- Verify the extension works as expected before committing
-- Only commit after user confirms the changes work
+- **Implement ONE change at a time**
+- **Ask user to test** after each change
+- Run `pnpm dev:firefox` and wait for user feedback
+- Only commit after user confirms the change works correctly
+- If multiple changes are requested, complete and test each one separately before moving to the next
 
 ## Firefox Extension Context
 - This project uses **WXT** framework
@@ -33,9 +34,9 @@
 
 ## Current Project
 - Firefox extension to tag/filter Gemini chat conversations
-- Three-dots hover menu for tag management (click the menu, not right-click)
-- Filter bar above conversation list
-- Tags stored locally, auto-assigned pastel colors
+- Right-click context menu for tag management (Add Tag, Remove Tag, Delete Chat)
+- Filter bar above conversation list with multi-select (Ctrl+Click for intersection)
+- Gray tags (no colors) for subtle appearance
 - "deleted" tag for virtual deletion (hidden from main view, visible in Deleted filter)
 
 ## Future Considerations
