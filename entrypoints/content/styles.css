@@ -1,7 +1,6 @@
 /* Gemini Tagger - Content Script Styles */
 
-/* Filter Bar */
-#gt-filter-bar {
+.gt-filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -11,7 +10,7 @@
 }
 
 .gt-filter-btn {
-  padding: 4px 12px;
+  padding: 4px 10px;
   border: none;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.1);
@@ -36,19 +35,19 @@
   --tag-color: #ef4444;
 }
 
-/* Tags */
 .gt-tag {
   display: inline-block;
-  padding: 2px 8px;
-  margin-left: 6px;
-  border-radius: 10px;
-  color: white;
+  padding: 1px 6px;
+  margin-left: 4px;
+  border-radius: 8px;
+  background-color: var(--tag-bg, rgba(255, 255, 255, 0.2));
+  color: #1f1f1f;
   font-size: 11px;
+  font-family: inherit;
   font-weight: 500;
   white-space: nowrap;
 }
 
-/* Context Menu */
 #gt-context-menu {
   position: fixed;
   z-index: 999999;
@@ -58,7 +57,8 @@
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   padding: 4px 0;
-  font-family: inherit;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 14px;
 }
 
 .gt-menu-item {
@@ -81,20 +81,19 @@
   background: rgba(239, 68, 68, 0.2);
 }
 
-/* Dark mode adjustments for light backgrounds */
 @media (prefers-color-scheme: light) {
-  #gt-filter-bar {
+  .gt-filter-bar {
     background: rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   .gt-filter-btn {
-    background: rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.06);
     color: #333;
   }
 
   .gt-filter-btn:hover {
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.12);
   }
 
   #gt-context-menu {
@@ -109,5 +108,10 @@
 
   .gt-menu-item:hover {
     background: rgba(0, 0, 0, 0.08);
+  }
+
+  .gt-tag {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #1f1f1f;
   }
 }

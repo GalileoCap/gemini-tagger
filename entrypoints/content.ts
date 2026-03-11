@@ -6,15 +6,16 @@ interface ChatTags {
 }
 
 const STORAGE_KEY = 'chatTags';
+
 const TAG_COLORS = [
-  '#3b82f6', // blue
-  '#22c55e', // green
-  '#ef4444', // red
-  '#eab308', // yellow
-  '#a855f7', // purple
-  '#f97316', // orange
-  '#ec4899', // pink
-  '#14b8a6', // teal
+  '#dbeafe', // blue-100
+  '#dcfce7', // green-100
+  '#fee2e2', // red-100
+  '#fef3c7', // amber-100
+  '#f3e8ff', // purple-100
+  '#fed7aa', // orange-100
+  '#fce7f3', // pink-100
+  '#ccfbf1', // teal-100
 ];
 
 function getTagColor(tag: string): string {
@@ -43,13 +44,15 @@ function createTagElement(tag: string): HTMLElement {
   const span = document.createElement('span');
   span.className = 'gt-tag';
   span.textContent = tag;
-  span.style.backgroundColor = getTagColor(tag);
+  const color = getTagColor(tag);
+  span.style.setProperty('--tag-bg', color);
+  span.style.color = '#1f1f1f';
   return span;
 }
 
 function createFilterBar(activeFilter: string, allTags: string[]): HTMLElement {
   const container = document.createElement('div');
-  'gt-filter-bar container.className =';
+  container.className = 'gt-filter-bar';
   container.id = 'gt-filter-bar';
 
   const allBtn = document.createElement('button');
@@ -60,7 +63,11 @@ function createFilterBar(activeFilter: string, allTags: string[]): HTMLElement {
 
   const uniqueTags = new Set<string>();
   allTags.forEach(chatTags => {
-    chatTags.forEach(tag => uniqueTags.add(tag));
+    chatTags.forEach(tag => {
+      if (tag !== 'deleted') {
+        uniqueTags.add(tag);
+      }
+    });
   });
 
   uniqueTags.forEach(tag => {
@@ -73,9 +80,9 @@ function createFilterBar(activeFilter: string, allTags: string[]): HTMLElement {
   });
 
   const deletedBtn = document.createElement('button');
-  deletedBtn.className = `gt-filter-btn gt-deleted-btn ${activeFilter === 'deleted' ? 'active' : ''}`;
+  deletedBtn.className = `gt-filter-btn gt-deleted-btn ${activeFilter === '__deleted__' ? 'active' : ''}`;
   deletedBtn.textContent = 'Deleted';
-  deletedBtn.addEventListener('click', () => setFilter('deleted'));
+  deletedBtn.addEventListener('click', () => setFilter('__deleted__'));
   container.appendChild(deletedBtn);
 
   return container;
@@ -113,7 +120,7 @@ function applyFilter(): void {
 
       let shouldShow = true;
 
-      if (currentFilter === 'deleted') {
+      if (currentFilter === '__deleted__') {
         shouldShow = hasDeletedTag;
       } else if (currentFilter === 'all') {
         shouldShow = !hasDeletedTag;
@@ -166,16 +173,17 @@ function createContextMenu(chatId: string, x: number, y: number): void {
     });
     menu.appendChild(addTagItem);
 
-    if (currentTags.length > 0) {
+    if (currentTags.filter(t => t !== 'deleted').length > 0) {
       const removeTagItem = document.createElement('div');
       removeTagItem.className = 'gt-menu-item';
       removeTagItem.textContent = 'Remove Tag';
       removeTagItem.addEventListener('click', async () => {
         removeContextMenu();
-        const tagToRemove = prompt(`Current tags: ${currentTags.join(', ')}\nEnter tag to remove:`);
+        const nonDeletedTags = currentTags.filter(t => t !== 'deleted');
+        const tagToRemove = prompt(`Current tags: ${nonDeletedTags.join(', ')}\nEnter tag to remove:`);
         if (tagToRemove) {
           const tag = tagToRemove.trim().toLowerCase();
-          if (currentTags.includes(tag)) {
+          if (nonDeletedTags.includes(tag)) {
             tags[chatId] = currentTags.filter(t => t !== tag);
             await saveTags(tags);
             refreshUI();
@@ -258,22 +266,24 @@ export default defineContentScript({
   main() {
     console.log('Gemini Tagger: Content script loaded');
 
-    document.addEventListener('contextmenu', (e) => {
-      const target = e.target as HTMLElement;
-      const conversation = target.closest<HTMLAnchorElement>('a[data-test-id="conversation"]');
-      
-      if (conversation) {
-        e.preventDefault();
-        const chatId = getChatIdFromHref(conversation.href);
-        if (chatId) {
-          createContextMenu(chatId, e.clientX, e.clientY);
-        }
-      }
-    });
-
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('#gt-context-menu')) {
+      
+      const actionsButton = target.closest<HTMLElement>('button[data-test-id="actions-menu-button"]');
+      
+      if (actionsButton) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const conversation = actionsButton.closest<HTMLAnchorElement>('a[data-test-id="conversation"]');
+        if (conversation) {
+          const chatId = getChatIdFromHref(conversation.href);
+          if (chatId) {
+            const rect = actionsButton.getBoundingClientRect();
+            createContextMenu(chatId, rect.left, rect.bottom);
+          }
+        }
+      } else if (!target.closest('#gt-context-menu')) {
         removeContextMenu();
       }
     });
